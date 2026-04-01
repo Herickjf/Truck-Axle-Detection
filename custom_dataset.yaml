@@ -1,0 +1,11 @@
+# diretorio onde estão as imagens e os rótulos
+path: /data 
+
+# caminho para os arquivos de treino, validação e teste relativos ao diretório acima
+train: train
+val: val
+test: test
+
+# nome das classes
+names:
+  0: axle
