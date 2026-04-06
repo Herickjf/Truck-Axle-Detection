@@ -167,12 +167,95 @@ def split_train_val(train_ratio=0.7, val_ratio=0.2, test_ratio=0.1, random_seed=
     }
 
 
+def convert_xyxy_to_yolo(base_path="data"):
+    import os
+    from PIL import Image
+
+    splits = ["train", "val", "test"]
+
+    for split in splits:
+        labels_dir = os.path.join(base_path, split, "labels")
+        images_dir = os.path.join(base_path, split, "images")
+
+        if not os.path.exists(labels_dir):
+            print(f"[AVISO] Pasta não encontrada: {labels_dir}")
+            continue
+
+        print(f"\nProcessando: {split}")
+
+        for file in os.listdir(labels_dir):
+            if not file.endswith(".txt"):
+                continue
+
+            label_path = os.path.join(labels_dir, file)
+
+            # tenta múltiplas extensões de imagem
+            img_name = file.replace(".txt", "")
+            image_path = None
+            for ext in [".jpg", ".jpeg", ".png"]:
+                temp_path = os.path.join(images_dir, img_name + ext)
+                if os.path.exists(temp_path):
+                    image_path = temp_path
+                    break
+
+            if image_path is None:
+                print(f"[IGNORADO] Imagem não encontrada para: {file}")
+                continue
+
+            try:
+                img = Image.open(image_path)
+                w, h = img.size
+            except Exception:
+                print(f"[ERRO] Imagem corrompida: {image_path}")
+                continue
+
+            new_lines = []
+
+            with open(label_path, "r") as f:
+                for line in f:
+                    parts = line.strip().split()
+
+                    # espera: class x_min y_min x_max y_max
+                    if len(parts) != 5:
+                        print(f"[IGNORADO] Formato inválido em {file}: {line.strip()}")
+                        continue
+
+                    try:
+                        cls = int(float(parts[0]))
+                        x_min, y_min, x_max, y_max = map(float, parts[1:])
+                    except ValueError:
+                        print(f"[ERRO] Conversão falhou em {file}: {line.strip()}")
+                        continue
+
+                    # conversão
+                    x_center = ((x_min + x_max) / 2) / w
+                    y_center = ((y_min + y_max) / 2) / h
+                    bw = (x_max - x_min) / w
+                    bh = (y_max - y_min) / h
+
+                    # validação básica
+                    if not (0 <= x_center <= 1 and 0 <= y_center <= 1 and 0 <= bw <= 1 and 0 <= bh <= 1):
+                        print(f"[IGNORADO] Valores fora do range em {file}: {line.strip()}")
+                        continue
+
+                    new_lines.append(f"{cls} {x_center} {y_center} {bw} {bh}")
+
+            # sobrescreve o arquivo
+            with open(label_path, "w") as f:
+                f.write("\n".join(new_lines))
+
+        print(f"[OK] {split} finalizado")
+
+
+
 def main():
     # split_img_notes()
     # fix_json_files()
     # json_to_txt()
 
     # verify_equivalence()
+
+    # convert_xyxy_to_yolo("data")
 
     return
 
