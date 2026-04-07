@@ -10,8 +10,8 @@ onde cada eixo é composto por um ou mais rodas.
 
 '''
 Entradas:
-- Conjunto de rodas detectadas, onde cada roda é representada por um ponto central (x, y) e uma largura (w).
-    - Formato: [(x1, y1, w1), (x2, y2, w2), ..., (xn, yn, wn)]
+- Conjunto de rodas detectadas, onde cada roda é representada por um ponto central (x, y), uma largura (w) e uma altura (h).
+    - Formato: [(x1, y1, w1, h1), (x2, y2, w2, h2), ..., (xn, yn, wn, hn)]
 - Permissividade: 
 '''
 
@@ -28,9 +28,6 @@ Entradas:
 2. Inicializar uma lista de eixos, inicialemente vazia e definir uma threshold;
 3. Para cada um dos labels, até o penúltimo:
     3.1.
-
-
-
 
 1. Ordenar conjunto de rodas (ponto central, largura, eixo = 0) 
 2. Incicializar lista de eixos vazia, definição do treshholdeweas em porcentagem
