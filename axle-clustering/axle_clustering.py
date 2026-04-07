@@ -9,9 +9,7 @@ def _cluster_wheels(wheels):
     Agrupa rodas em eixos (axles) com base na distância entre elas.
     """
     if not wheels or len(wheels) < 2:
-        return [1] * len(wheels)
-
-    wheels.sort(key=lambda x: x[0])  # Ordenar por coordenada x
+        return [1] * len(wheels)  # Ordenar por coordenada x
 
     clusters = [0] * len(wheels)
     current_cluster = 1
@@ -33,13 +31,10 @@ def _cluster_wheels(wheels):
 
         threshold = base_max * dist / dx
 
+        clusters[i] = current_cluster
         if dist > threshold:
-            clusters[i] = current_cluster
             current_cluster += 1
-            clusters[i + 1] = current_cluster
-        else:
-            clusters[i] = current_cluster
-            clusters[i + 1] = current_cluster
+        clusters[i + 1] = current_cluster
 
     return clusters
 
@@ -95,6 +90,8 @@ def cluster_axles(wheels):
     """
     if wheels is None or len(wheels) == 0:
         raise ValueError("Lista de rodas vazia")
+    
+    wheels.sort(key=lambda x: x[0])
 
     clusters = _cluster_wheels(wheels)
     bounding_boxes = _build_bounding_boxes(wheels, clusters)
