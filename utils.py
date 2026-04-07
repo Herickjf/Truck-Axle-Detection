@@ -4,7 +4,6 @@ import json
 import re
 import random
 
-
 def split_img_notes():
     src_dir = "data/imgs&anotacoes"
 
@@ -18,9 +17,7 @@ def split_img_notes():
                 shutil.move(note_path, "data/anotacoes")
 
     print("Imagens e anotações foram movidas para os diretórios correspondentes.")
-
     return
-
 
 def json_to_txt():
     labels_dir = "data/anotacoes"
@@ -43,19 +40,17 @@ def json_to_txt():
                 for item in data["shapes"]:
                     category_id = 0  # Só há uma categoria, então o ID é 0
                     bbox = item["points"]
-                    txt_file.write(
-                        f"{category_id} {bbox[0][0]} {bbox[0][1]} {bbox[1][0]} {bbox[1][1]}\n"
-                    )
+                    
+                    txt_file.write(f"{category_id} {bbox[0][0]} {bbox[0][1]} {bbox[1][0]} {bbox[1][1]}\n")
 
     return
-
 
 def fix_json_files():
     def remove_imageData(path):
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # remove o campo "imageData": "...."
+        # Remove o campo "imageData": "...."
         content = re.sub(r'"imageData"\s*:\s*".*?",?', "", content, flags=re.DOTALL)
 
         with open(path, "w", encoding="utf-8") as f:
@@ -66,13 +61,13 @@ def fix_json_files():
             content = f.read()
 
         if '"imageData"' in content:
-            # corta antes do imageData
+            # Corta antes do imageData
             content = content.split('"imageData"')[0]
 
-            # remove vírgula final se tiver
+            # Remove vírgula final se tiver
             content = content.rstrip().rstrip(",")
 
-            # fecha o JSON corretamente
+            # Fecha o JSON corretamente
             content += "\n}"
 
         with open(path, "w", encoding="utf-8") as f:
@@ -84,7 +79,6 @@ def fix_json_files():
         if filename.endswith(".json"):
             remove_imageData(os.path.join(path, filename))
             fix_truncated_json(os.path.join(path, filename))
-
 
 def verify_equivalence():
     img_files = set(os.listdir("data/imgs"))
@@ -100,16 +94,12 @@ def verify_equivalence():
         missing_images = label_basenames - img_basenames
 
         if missing_labels:
-            print(
-                "Imagens sem rótulos correspondentes:",
-                os.path.join("data/imgs", f"{missing_labels.pop()}.png"),
-            )
-        if missing_images:
-            print(
-                "Rótulos sem imagens correspondentes:",
-                os.path.join("data/labels", f"{missing_images.pop()}.txt"),
-            )
+            print("Imagens sem rótulos correspondentes:",
+                  os.path.join("data/imgs", f"{missing_labels.pop()}.png"))
 
+        if missing_images:
+            print("Rótulos sem imagens correspondentes:",
+                  os.path.join("data/labels", f"{missing_images.pop()}.txt"))
 
 def split_train_val(train_ratio=0.7, val_ratio=0.2, test_ratio=0.1, random_seed=42):
     img_dir = "data/images"
@@ -166,7 +156,6 @@ def split_train_val(train_ratio=0.7, val_ratio=0.2, test_ratio=0.1, random_seed=
         "test": len(test_files),
     }
 
-
 def convert_xyxy_to_yolo(base_path="data"):
     import os
     from PIL import Image
@@ -189,7 +178,7 @@ def convert_xyxy_to_yolo(base_path="data"):
 
             label_path = os.path.join(labels_dir, file)
 
-            # tenta múltiplas extensões de imagem
+            # Tenta múltiplas extensões de imagem
             img_name = file.replace(".txt", "")
             image_path = None
             for ext in [".jpg", ".jpeg", ".png"]:
@@ -205,6 +194,7 @@ def convert_xyxy_to_yolo(base_path="data"):
             try:
                 img = Image.open(image_path)
                 w, h = img.size
+            
             except Exception:
                 print(f"[ERRO] Imagem corrompida: {image_path}")
                 continue
@@ -215,7 +205,7 @@ def convert_xyxy_to_yolo(base_path="data"):
                 for line in f:
                     parts = line.strip().split()
 
-                    # espera: class x_min y_min x_max y_max
+                    # Espera: class x_min y_min x_max y_max
                     if len(parts) != 5:
                         print(f"[IGNORADO] Formato inválido em {file}: {line.strip()}")
                         continue
@@ -223,42 +213,37 @@ def convert_xyxy_to_yolo(base_path="data"):
                     try:
                         cls = int(float(parts[0]))
                         x_min, y_min, x_max, y_max = map(float, parts[1:])
+                    
                     except ValueError:
                         print(f"[ERRO] Conversão falhou em {file}: {line.strip()}")
                         continue
 
-                    # conversão
+                    # Conversão
                     x_center = ((x_min + x_max) / 2) / w
                     y_center = ((y_min + y_max) / 2) / h
                     bw = (x_max - x_min) / w
                     bh = (y_max - y_min) / h
 
-                    # validação básica
+                    # Validação básica
                     if not (0 <= x_center <= 1 and 0 <= y_center <= 1 and 0 <= bw <= 1 and 0 <= bh <= 1):
                         print(f"[IGNORADO] Valores fora do range em {file}: {line.strip()}")
                         continue
 
                     new_lines.append(f"{cls} {x_center} {y_center} {bw} {bh}")
 
-            # sobrescreve o arquivo
+            # Sobrescreve o arquivo
             with open(label_path, "w") as f:
                 f.write("\n".join(new_lines))
 
         print(f"[OK] {split} finalizado")
 
-
-
 def main():
     # split_img_notes()
     # fix_json_files()
     # json_to_txt()
-
     # verify_equivalence()
-
     # convert_xyxy_to_yolo("data")
-
     return
-
 
 if __name__ == "__main__":
     main()
